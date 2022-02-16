@@ -1,0 +1,153 @@
+<body>
+    <style>
+        table{
+            border-collapse: collapse;
+        }
+        td {
+            border: 1px solid black;
+            text-align: center;
+            width: 10px;
+            height: 10px;
+        }
+        th {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+        }
+    </style>
+    <script>
+
+        function render(capacity, word, b, sets, ways){
+            var byte_offset = Math.log(word/8)/Math.log(2)
+            var block_offset = Math.log(b)/Math.log(2)
+            var set_offset = Math.log(sets)/Math.log(2)
+            document.getElementById("addr").innerHTML = "<td>"+(word-byte_offset-block_offset-set_offset)+"</td>"+ "<td>"+set_offset+"</td>"+ "<td>"+block_offset+"</td>"+ "<td>"+byte_offset+"</td>"
+
+            var cache = "<caption>Cache</caption>";
+            cache += "<tr>";
+            for(let i = ways; i>0; i--) cache+= "<th>"+i+"-Way</th>";
+            cache += "</tr>";
+            cache += "<tr>";
+            for(let i = ways; i>0; i--){
+                cache+= "<td>"
+                cache+= "<table>"
+                cache+= "<tr><th>V</th><th>Tag</th><th>Data</th></tr>";
+                for(let i = sets; i>0; i--){
+                    cache+= "<tr>"
+                    cache+= "<td></td><td></td>"
+                    cache+= "<td><table><tr>"
+                    for(let i = b; i>0; i--) cache+= "<td></td>";
+                    cache+= "</tr></table></td>"
+                    cache+= "</tr>";
+                }
+                cache+= "</table></td>";
+            }
+
+            cache += "</tr>";
+            document.getElementById("cache").innerHTML = cache;
+        }
+
+        function set_capacity_blocks(v){
+            var b = document.getElementById("b").value
+            if(b) set_capacity_word(v*b)
+        }
+
+        function set_capacity_word(v){
+            var word = document.getElementById("word_bits").value
+            if(word) set_capacity(v*word)
+        }
+
+        function set_capacity(v){
+            var word = parseInt(document.getElementById("word_bits").value)
+            document.getElementById("capacity_words").value = word?v/word:""
+            var b = parseInt(document.getElementById("b").value)
+            document.getElementById("capacity_blocks").value = (b&&word)?v/(word*b):""
+            document.getElementById("capacity_kibi").value = v/8192
+            document.getElementById("capacity_bytes").value = v/8
+            document.getElementById("capacity_bits").value = v
+        }
+
+        function set_word(v){
+            document.getElementById("word_bytes").value = v/8
+            document.getElementById("word_bits").value = v
+
+            if(parseInt(document.getElementById("capacity_words").value)) document.getElementById("capacity_words").onkeyup()
+            if(parseInt(document.getElementById("capacity_blocks").value)) document.getElementById("capacity_blocks").onkeyup()
+        }
+
+        function set_b(v){
+            document.getElementById("b").value = v
+
+            if(parseInt(document.getElementById("capacity_blocks").value)) document.getElementById("capacity_blocks").onkeyup()
+        }
+
+        function set_sets(v){
+            document.getElementById("sets").value = v
+            document.getElementById("associative").checked = (v==1);
+        }
+        function set_ways(v){
+            document.getElementById("ways").value = v
+            document.getElementById("direct").checked = (v==1);
+        }
+
+        function calc(){
+            var capacity = parseInt(document.getElementById("capacity_bits").value)
+            var word = parseInt(document.getElementById("word_bits").value)
+            var b = parseInt(document.getElementById("b").value)
+            var sets = parseInt(document.getElementById("sets").value)
+            var ways = parseInt(document.getElementById("ways").value)
+
+            if(word&&b&&sets&&ways) capacity = word*b*sets*ways
+            if(!word && (capacity&&b&&sets&&ways)) word = capacity/(b*ways*sets)
+            if(!b && (capacity&&word&&sets&&ways)) b = capacity/(word*ways*sets)
+            if(!sets && (capacity&&word&&b&&ways)) sets = capacity/(word*b*ways)
+            if(!ways && (capacity&&word&&b&&sets)) ways = capacity/(word*b*sets)
+
+
+            set_capacity(capacity)
+            set_word(word)
+            set_b(b)
+            set_sets(sets)
+            set_ways(ways)
+
+            render(capacity, word, b, sets, ways)
+        }
+
+    </script>
+<form autocomplete="off" style="position:absolute; left: 20px; z-index: 10">
+    <label><b>Fill 4 out of the 5 following fields</b></label><br>
+    <label>Capacity</label><br>
+    <input onkeyup="set_capacity_blocks(this.value)" id="capacity_blocks"> blocks<br>
+    <input onkeyup="set_capacity_word(this.value)" id="capacity_words"> words<br>
+    <input onkeyup="set_capacity(this.value*8192)" id="capacity_kibi"> KiB<br>
+    <input onkeyup="set_capacity(this.value*8)" id="capacity_bytes"> bytes<br>
+    <input onkeyup="set_capacity(this.value)" id="capacity_bits"> bits<br><br>
+    <label>Word size / Address format:</label><br>
+    <input onkeyup="set_word(this.value*8)" id="word_bytes"> bytes<br>
+    <input onkeyup="set_word(this.value)" id="word_bits"> bits<br><br>
+    <label>Words per block (b):</label><br>
+    <input onkeyup="set_b(this.value)" id="b"> words<br><br>
+    <label>Sets (S):</label><br>
+    <input onkeyup="set_sets(this.value)" id="sets"><br>
+    <label>Fully associative:</label>
+    <input onchange="if(this.checked) set_sets(1)" type="checkbox" id="associative"><br><br>
+    <label>Ways (N):</label><br>
+    <input onkeyup="set_ways(this.value)" id="ways"><br>
+    <label>Direct access:</label>
+    <input onchange="if(this.checked) set_ways(1)"type="checkbox" id="direct"><br><br>
+    <input onclick="calc()" type="button" value="Calculate" />
+    </form>
+    <div style="position:absolute; right: 20px; text-align: left; width: 60%; overflow: auto">
+        <table style="float:right">
+            <caption>Address</caption>
+            <tr>
+                <th>TAG</th>
+                <th>SET</th>
+                <th>BLOCK OFFSET</th>
+                <th>BYTE OFFSET</th>
+            </tr>
+            <tr id="addr"></tr>
+        </table>
+        <table id="cache"></table>
+    </div>
+
+</body>

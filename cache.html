@@ -17,9 +17,9 @@
     <script>
 
         function render(capacity, word, b, sets, ways){
-            var byte_offset = Math.log(word/8)/Math.log(2)
-            var block_offset = Math.log(b)/Math.log(2)
-            var set_offset = Math.log(sets)/Math.log(2)
+            var byte_offset = Math.ceil(Math.log(word/8)/Math.log(2))
+            var block_offset = Math.ceil(Math.log(b)/Math.log(2))
+            var set_offset = Math.ceil(Math.log(sets)/Math.log(2))
             document.getElementById("addr").innerHTML = "<td>"+(word-byte_offset-block_offset-set_offset)+"</td>"+ "<td>"+set_offset+"</td>"+ "<td>"+block_offset+"</td>"+ "<td>"+byte_offset+"</td>"
 
             var cache = "<caption>Cache</caption>";
@@ -78,6 +78,7 @@
             document.getElementById("b").value = v
 
             if(parseInt(document.getElementById("capacity_blocks").value)) document.getElementById("capacity_blocks").onkeyup()
+            if(parseInt(document.getElementById("capacity_words").value)) document.getElementById("capacity_words").onkeyup()
         }
 
         function set_sets(v){
